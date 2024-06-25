@@ -1,19 +1,30 @@
 #!/bin/bash
 
-# Ensure the script is run as root
+# Raspberry Pi
+# I will set up a template along with items and triggers to monitor
+# a Raspberry Pi for critical information not normally gathered.
+# Today I monitor:
+# CPU Temperature, and will alert when exceeding 79 degrees.
+# CPU Throttling and Capping status, will alert on either condition.
+# EEPROM Update Available, will check once on install and then again
+# every 6 hours.
+# Most of the code here is to work around allowing the Zabbix user to
+# execute as sudo without entering a password.
+
+# I am ROOT?
 if [ "$EUID" -ne 0 ]; then
   echo "Please run as root"
   exit 1
 fi
 
-# Function to safely remove files
+# Function to remove files if exist
 safe_remove_file() {
   if [ -f "$1" ]; then
     rm "$1"
   fi
 }
 
-# Function to safely remove directories if empty
+# Function to remove directories if empty
 safe_remove_dir_if_empty() {
   if [ -d "$1" ] && [ -z "$(ls -A "$1")" ]; then
     rmdir "$1"
@@ -38,12 +49,14 @@ if [ -d "/etc/zabbix/zabbix_agent2.d" ]; then
   # Zabbix Agent 2.x detected
   ZABBIX_AGENT_SERVICE="zabbix-agent2"
   ZABBIX_AGENT_CONF_DIR="/etc/zabbix/zabbix_agent2.d"
+  echo  "Determined that we are installing into zabbix-agent2."
 elif [ -d "/etc/zabbix/zabbix_agentd.conf.d" ]; then
   # Zabbix Agent 1.x detected
+  echo  "Determined that we are installing into zabbix-agent (not part deux)."
   ZABBIX_AGENT_SERVICE="zabbix-agent"
   ZABBIX_AGENT_CONF_DIR="/etc/zabbix/zabbix_agentd.conf.d"
 else
-  echo "Unable to determine Zabbix Agent version. Check Zabbix Agent installation."
+  echo "I've failed. I can't figure out what version of Zabbix Agent is installed. That's nuts."
   exit 1
 fi
 
@@ -55,11 +68,10 @@ mkdir -p /var/lib/zabbix
 # Add the UnsafeUserParameters setting and UserParameter to the Zabbix agent configuration if not already present
 if [ -d "$ZABBIX_AGENT_CONF_DIR" ]; then
   conf_file="$ZABBIX_AGENT_CONF_DIR/raspberry_pi_eeprom.conf"
-
-  # Check if the configuration file exists
-  if [ ! -f "$conf_file" ]; then
-    echo "Configuration file ($conf_file) not found. Creating a new one."
-    echo "### Option: UnsafeUserParameters
+# Build the configuration file
+if [ -f "$conf_file" ]; then
+  rm "$conf_file"
+  echo "### Option: UnsafeUserParameters
 #       Allow all characters to be passed in arguments to user-defined parameters.
 #       The following characters are not allowed:
 #       \\ ' \" \` * ? [ ] { } ~ \$ ! & ; ( ) < > | # @
@@ -80,27 +92,7 @@ UserParameter=raspi.cpuTemperature,vcgencmd measure_temp | grep -oP '\\d+\\.\\d+
 
 # Zabbix UserParameter for Raspberry Pi CPU throttled status
 UserParameter=raspi.cpuThrottled,vcgencmd get_throttled | awk -F\"=\" '{print \$2}'" > "$conf_file"
-  else
-    # Add the UnsafeUserParameters setting if not already present
-    if ! grep -q "UnsafeUserParameters=1" "$conf_file"; then
-      echo "UnsafeUserParameters=1" >> "$conf_file"
-    fi
-
-    # Add the UserParameter for EEPROM update if not already present
-    if ! grep -q "UserParameter=raspi.eeprom_update,/etc/zabbix/scripts/read_eeprom_status.sh" "$conf_file"; then
-      echo "UserParameter=raspi.eeprom_update,/etc/zabbix/scripts/read_eeprom_status.sh" >> "$conf_file"
-    fi
-
-    # Add the UserParameter for CPU temperature if not already present
-    if ! grep -q "UserParameter=raspi.cpuTemperature,vcgencmd measure_temp | grep -oP '\\d+\\.\\d+'" "$conf_file"; then
-      echo "UserParameter=raspi.cpuTemperature,vcgencmd measure_temp | grep -oP '\\d+\\.\\d+'" >> "$conf_file"
-    fi
-
-    # Add the UserParameter for CPU throttled status if not already present
-    if ! grep -q "UserParameter=raspi.cpuThrottled,vcgencmd get_throttled | awk -F\"=\" '{print \$2}'" "$conf_file"; then
-      echo "UserParameter=raspi.cpuThrottled,vcgencmd get_throttled | awk -F\"=\" '{print \$2}'" >> "$conf_file"
-    fi
-  fi
+fi
 else
   echo "Zabbix Agent configuration directory ($ZABBIX_AGENT_CONF_DIR) not found. Please check your Zabbix Agent installation."
   exit 1
