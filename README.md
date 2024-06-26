@@ -1,6 +1,10 @@
 # ZABBIX-RPI
 
-This repository contains a Zabbix template and setup script to monitor Raspberry Pi devices. The template collects the following metrics:
+This repository contains a Zabbix template and setup script to monitor Raspberry Pi devices. 
+
+I know I need to reformat this and submit it to the community, I will... But I just got this done and wanted to store it, and maybe someone will find it useful in the meantime. I do. I have a raspi in the garage running a display, it cooks! I also have one in a closet that gets into a computing backlog sometimes and heats up... So I enjoy my fruits here, maybe you will, too!
+
+The template collects the following metrics:
 
 - CPU Temperature
 - CPU Throttling and Capping Status
