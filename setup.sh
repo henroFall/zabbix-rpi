@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#v1.
+#v1.0
 # Raspberry Pi CPU Monitor Installer
 # I will set up a template along with items and triggers to monitor
 # a Raspberry Pi for critical information not normally gathered.
