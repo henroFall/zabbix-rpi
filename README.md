@@ -42,7 +42,7 @@ The setup script will handle the detection and installation of any missing tools
     - Log in to your Zabbix web interface.
     - Navigate to **Configuration** -> **Templates**.
     - Click on **Import**.
-    - Select the `raspberry_pi_template.xml` file from the cloned directory and import it.
+    - Select the `zbx_rsapi_template.yaml` file from the cloned directory and import it.
 
 3. **Link the Template to Your Host**
 
