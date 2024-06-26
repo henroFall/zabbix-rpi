@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# Raspberry Pi
+#v1.
+# Raspberry Pi CPU Monitor Installer
 # I will set up a template along with items and triggers to monitor
 # a Raspberry Pi for critical information not normally gathered.
 # Today I monitor:
 # CPU Temperature, and will alert when exceeding 79 degrees.
-# CPU Throttling and Capping status, will alert on either condition.
-# EEPROM Update Available, will check once on install and then again
+# CPU Throttling and Capping status, I will alert on either condition.
+# EEPROM Update Available, will I check once on install and then again
 # every 6 hours.
 # Most of the code here is to work around allowing the Zabbix user to
 # execute as sudo without entering a password.
@@ -17,21 +18,19 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-# Function to remove files if exist
 safe_remove_file() {
   if [ -f "$1" ]; then
     rm "$1"
   fi
 }
 
-# Function to remove directories if empty
 safe_remove_dir_if_empty() {
   if [ -d "$1" ] && [ -z "$(ls -A "$1")" ]; then
     rmdir "$1"
   fi
 }
 
-# Add Zabbix user to 'video' group to run vcgencmd commands
+# To run vcgencmd commands
 usermod -aG video zabbix
 
 # Remove existing scripts and files if they exist
@@ -52,11 +51,11 @@ if [ -d "/etc/zabbix/zabbix_agent2.d" ]; then
   echo  "Determined that we are installing into zabbix-agent2."
 elif [ -d "/etc/zabbix/zabbix_agentd.conf.d" ]; then
   # Zabbix Agent 1.x detected
-  echo  "Determined that we are installing into zabbix-agent (not part deux)."
+  echo  "Determined that we are installing into zabbix-agent (not part deux, hot shot)."
   ZABBIX_AGENT_SERVICE="zabbix-agent"
   ZABBIX_AGENT_CONF_DIR="/etc/zabbix/zabbix_agentd.conf.d"
 else
-  echo "I've failed. I can't figure out what version of Zabbix Agent is installed. That's nuts."
+  echo "Nuts, I've failed. I can't figure out what version of Zabbix Agent is installed. That's crazy."
   exit 1
 fi
 
@@ -65,7 +64,6 @@ mkdir -p /usr/local/bin
 mkdir -p /etc/zabbix/scripts
 mkdir -p /var/lib/zabbix
 
-# Add the UnsafeUserParameters setting and UserParameter to the Zabbix agent configuration if not already present
 if [ -d "$ZABBIX_AGENT_CONF_DIR" ]; then
   conf_file="$ZABBIX_AGENT_CONF_DIR/raspberry_pi_eeprom.conf"
 # Build the configuration file
@@ -113,7 +111,6 @@ else
 fi
 EOL
 
-# Make the check_eeprom_update.sh script executable
 chmod 755 /usr/local/bin/check_eeprom_update.sh
 
 # Create the update_eeprom_status.sh script
@@ -124,7 +121,6 @@ cat <<EOL > /usr/local/bin/update_eeprom_status.sh
 /usr/local/bin/check_eeprom_update.sh > /var/lib/zabbix/eeprom_status
 EOL
 
-# Make the update_eeprom_status.sh script executable
 chmod 755 /usr/local/bin/update_eeprom_status.sh
 
 # Create the read_eeprom_status.sh script
@@ -135,10 +131,8 @@ cat <<EOL > /etc/zabbix/scripts/read_eeprom_status.sh
 cat /var/lib/zabbix/eeprom_status
 EOL
 
-# Make the read_eeprom_status.sh script executable
 chmod 755 /etc/zabbix/scripts/read_eeprom_status.sh
 
-# Ensure the Zabbix user can read the status file
 touch /var/lib/zabbix/eeprom_status
 chown zabbix:zabbix /var/lib/zabbix/eeprom_status
 chmod 644 /var/lib/zabbix/eeprom_status
@@ -146,10 +140,9 @@ chmod 644 /var/lib/zabbix/eeprom_status
 # Add a cron job to run the update script every 6 hours
 (echo "0 */6 * * * /usr/local/bin/update_eeprom_status.sh") | crontab -
 
-# Run Once
+# Run once to get an initial value for Zabbix
 /usr/local/bin/update_eeprom_status.sh
 
-# Restart the Zabbix Agent service
 systemctl restart "$ZABBIX_AGENT_SERVICE"
 
 echo "Setup completed. Zabbix Agent is now configured to check for EEPROM updates every 6 hours."
