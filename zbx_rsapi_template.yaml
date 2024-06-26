@@ -1,0 +1,99 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: e960332b3f6c46a1956486d4f3f99fce
+      name: 'Templates/Server hardware'
+  templates:
+    - uuid: 749eee0333fd435d98af29812eaa44c1
+      template: 'Raspberry Pi by Zabbix agent'
+      name: 'Raspberry Pi by Zabbix agent'
+      groups:
+        - name: 'Templates/Server hardware'
+      items:
+        - uuid: d691d559ef614e2287f1076b04946a3c
+          name: 'CPU Temperature (pi)'
+          key: raspi.cpuTemperature
+          delay: 5m
+          trends: '0'
+          value_type: FLOAT
+          units: °C
+          tags:
+            - tag: component
+              value: cpu
+          triggers:
+            - uuid: a3f17e52a93a405282cbbaa23db373e2
+              expression: 'last(/Raspberry Pi by Zabbix agent/raspi.cpuTemperature)>=79'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'last(/Raspberry Pi by Zabbix agent/raspi.cpuTemperature,#5)<=78.99'
+              name: 'CPU temperature has reached 79 °C, throttling may occur soon (raspi)'
+              priority: WARNING
+              tags:
+                - tag: component
+                  value: cpu
+            - uuid: 7a712781a24f4a89ab15e4aebc78262f
+              expression: 'length(last(/Raspberry Pi by Zabbix agent/raspi.cpuTemperature))<=1'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'length(last(/Raspberry Pi by Zabbix agent/raspi.cpuTemperature))>0'
+              name: 'CPU Temperature NULL, this host is NOT a Raspberry Pi. You should remove the Raspberry Pi Template.'
+              priority: INFO
+              tags:
+                - tag: component
+                  value: cpu
+        - uuid: c13321d5e4554277add27fa66c0100ed
+          name: 'CPU Throttled - CAPPED (pi)'
+          key: raspi.cpuThrottled
+          delay: 5m
+          trends: '0'
+          value_type: CHAR
+          tags:
+            - tag: component
+              value: cpu
+          triggers:
+            - uuid: 8c73303d10c24c3a9d727a0816a15eb9
+              expression: 'length(last(/Raspberry Pi by Zabbix agent/raspi.cpuThrottled))<=1'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'length(last(/Raspberry Pi by Zabbix agent/raspi.cpuThrottled))>0'
+              name: 'CPU Frequency Cap  & Throttle NULL, this host is NOT a Raspberry Pi. You should remove the Raspberry Pi Template.'
+              priority: INFO
+              tags:
+                - tag: component
+                  value: cpu
+            - uuid: a4f3320e860440688ed52f6e0440d8fa
+              expression: 'last(/Raspberry Pi by Zabbix agent/raspi.cpuThrottled)="0x2" or last(/Raspberry Pi by Zabbix agent/raspi.cpuThrottled)="0x6"'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'last(/Raspberry Pi by Zabbix agent/raspi.cpuThrottled,#5)<>"0x2" and last(/Raspberry Pi by Zabbix agent/raspi.cpuThrottled,#5)<>"0x6"'
+              name: 'CPU is FREQUENCY CAPPED (raspi)'
+              priority: WARNING
+              tags:
+                - tag: component
+                  value: cpu
+            - uuid: 7ae3b715059942b8894fa822f8a9a293
+              expression: 'last(/Raspberry Pi by Zabbix agent/raspi.cpuThrottled)="0x4" or last(/Raspberry Pi by Zabbix agent/raspi.cpuThrottled)="0x6"'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'last(/Raspberry Pi by Zabbix agent/raspi.cpuThrottled,#5)<>"0x4" and last(/Raspberry Pi by Zabbix agent/raspi.cpuThrottled,#5)<>"0x6"'
+              name: 'CPU is FREQUENCY THROTTLED (raspi)'
+              priority: WARNING
+              tags:
+                - tag: component
+                  value: cpu
+        - uuid: cc61bfe89c214803adeb18967beaaada
+          name: 'EEPROM Update Available (pi)'
+          key: raspi.eeprom_update
+          tags:
+            - tag: component
+              value: mainboard
+          triggers:
+            - uuid: a42d6a312a734f329361ed7b80627a96
+              expression: 'last(/Raspberry Pi by Zabbix agent/raspi.eeprom_update)=1'
+              recovery_mode: RECOVERY_EXPRESSION
+              recovery_expression: 'last(/Raspberry Pi by Zabbix agent/raspi.eeprom_update)=0'
+              name: 'EEPROM Update is Available'
+              priority: WARNING
+              tags:
+                - tag: component
+                  value: mainboard
+      tags:
+        - tag: class
+          value: hardware
+        - tag: target
+          value: raspi
