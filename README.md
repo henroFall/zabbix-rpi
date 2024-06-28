@@ -36,7 +36,7 @@ The setup script will handle the detection and installation of any missing tools
 
     ```
     git clone https://github.com/henroFall/zabbix-rpi.git
-    cd raspberry-pi-zabbix-template
+    cd zabbix-rpi
     chmod +x setup.sh
     sudo ./setup.sh
     ```
