@@ -35,7 +35,7 @@ The setup script will handle the detection and installation of any missing tools
     Execute the following command to automatically set up your Raspberry Pi for Zabbix monitoring. This script handles all necessary configurations, including checking for and installing any required packages:
 
     ```
-    git clone https://github.com/henroFall/raspberry-pi-zabbix-template.git
+    git clone https://github.com/henroFall/zabbix-rpi.git
     cd raspberry-pi-zabbix-template
     chmod +x setup.sh
     sudo ./setup.sh
