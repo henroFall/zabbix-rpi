@@ -82,10 +82,6 @@ The setup script will handle the detection and installation of any missing tools
     sudo tail -f /var/log/zabbix/zabbix_agentd.log
     ```
 
-## Contributions
-
-Contributions are welcome! Please fork this repository and submit pull requests.
-
 ## License
 
 This project is licensed under the MIT License.
